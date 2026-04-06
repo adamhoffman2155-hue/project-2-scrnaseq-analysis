@@ -34,34 +34,22 @@ The analysis explores MSI-high immune infiltration patterns and T-cell exhaustio
 
 ```
 project-2-scrnaseq-analysis/
+├── README.md
 ├── Dockerfile
 ├── environment.yml
-├── notebooks/
-│   ├── 01_qc_filtering.ipynb
-│   ├── 02_normalization_scaling.ipynb
-│   ├── 03_dimensionality_reduction.ipynb
-│   ├── 04_clustering.ipynb
-│   ├── 05_cell_type_annotation.ipynb
-│   ├── 06_differential_expression.ipynb
-│   ├── 07_trajectory_analysis.ipynb
-│   └── 08_integration.ipynb
+├── config/
+│   └── analysis_config.yaml
 ├── scripts/
-│   ├── qc_metrics.py
-│   ├── clustering.R
 │   ├── annotation.py
+│   ├── clustering.R
+│   ├── generate_synthetic_data.py
+│   ├── qc_metrics.py
+│   ├── run_workflow.py
 │   ├── trajectory.R
 │   └── visualization_utils.py
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── metadata/
-├── results/
-│   ├── qc/
-│   ├── figures/
-│   ├── tables/
-│   └── objects/
-└── config/
-    └── analysis_config.yaml
+└── tests/
+    ├── __init__.py
+    └── test_workflow.py
 ```
 
 ## Quick Start
@@ -72,13 +60,14 @@ cd project-2-scrnaseq-analysis
 
 # Using Docker
 docker build -t scrnaseq-analysis .
-docker run -it -v $(pwd):/workspace -p 8888:8888 scrnaseq-analysis bash
+docker run -it -v $(pwd):/workspace scrnaseq-analysis bash
 
 # Or Conda
 conda env create -f environment.yml
 conda activate scrnaseq-analysis
 
-jupyter lab
+# Run the complete workflow
+python scripts/run_workflow.py
 ```
 
 ## My Role

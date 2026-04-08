@@ -32,14 +32,12 @@ RUN conda run -n scrnaseq-analysis \
 
 # Copy project files
 COPY scripts/ scripts/
-COPY notebooks/ notebooks/
 COPY config/ config/
+COPY tests/ tests/
 
 # Create data directories
 RUN mkdir -p data/{raw,processed,metadata} results/{qc,figures,tables,objects}
 
-# Expose Jupyter port
-EXPOSE 8888
-
 # Set entrypoint
-ENTRYPOINT ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--no-browser"]
+ENTRYPOINT ["python"]
+CMD ["scripts/run_workflow.py"]

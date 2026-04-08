@@ -1,8 +1,6 @@
 #!/usr/bin/env Rscript
 
-"""
-Seurat-based Clustering and Dimensionality Reduction
-"""
+# Seurat-based Clustering and Dimensionality Reduction
 
 library(Seurat)
 library(tidyverse)
@@ -19,7 +17,7 @@ create_seurat_object <- function(counts_path, project_name = "scRNA") {
   if (grepl("\\.csv", counts_path)) {
     counts <- read.csv(counts_path, row.names = 1)
   } else if (grepl("\\.mtx", counts_path)) {
-    counts <- readMM(counts_path)
+    counts <- Matrix::readMM(counts_path)
   } else {
     stop("Unsupported file format")
   }

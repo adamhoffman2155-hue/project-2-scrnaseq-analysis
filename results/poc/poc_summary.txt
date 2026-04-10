@@ -1,0 +1,61 @@
+PROOF OF CONCEPT - scRNA-seq workflow on PBMC3k
+============================================================
+
+Scope note:
+  This POC validates the scRNA-seq infrastructure only.
+  It does NOT answer the MSI / tumor-immune question.
+  The full MSI-GEA analysis needs a larger dataset
+  (e.g. Pelka 2021 CRC atlas, ~2 GB) and is out of
+  scope for a 1-day POC.
+
+Dataset: 10x Genomics PBMC 3k
+  Upstream: https://cf.10xgenomics.com/samples/cell-exp/1.1.0/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz
+  Loader: sc.datasets.pbmc3k() with fallback to raw 10x mtx files (barcodes/genes/matrix) mirrored on GitHub.
+
+Counts:
+  N cells loaded         : 2700
+  N genes loaded         : 32738
+  N cells after QC       : 2643
+  N genes after QC       : 13714
+  N Leiden clusters      : 7
+
+Cell-type distribution (marker-based):
+  T_cell       : 1177
+  Monocyte     : 688
+  NK_cell      : 437
+  B_cell       : 341
+
+Cluster -> cell type:
+  cluster  0 (n=1177) -> T_cell
+  cluster  1 (n= 341) -> B_cell
+  cluster  2 (n= 640) -> Monocyte
+  cluster  3 (n=  12) -> Monocyte
+  cluster  4 (n= 429) -> NK_cell
+  cluster  5 (n=  36) -> Monocyte
+  cluster  6 (n=   8) -> NK_cell
+
+Top 5 markers per Leiden cluster (t-test):
+  cluster  0: LDHB, CD3D, RPS12, RPS27, RPS25
+  cluster  1: CD74, HLA-DRA, CD79A, HLA-DPB1, HLA-DRB1
+  cluster  2: FTL, CST3, TYROBP, FTH1, AIF1
+  cluster  3: SDPR, GPX1, TAGLN2, GNG11, PF4
+  cluster  4: NKG7, B2M, GZMA, CST7, CCL5
+  cluster  5: HLA-DRA, CD74, CST3, HLA-DPA1, HLA-DPB1
+  cluster  6: DUT, PSME2, GAPDH, CFL1, ITGB1BP1
+
+Caveats:
+  - PBMC3k is a benchmarking dataset, not a tumor sample.
+  - No MSI / tumor metadata available here.
+  - Marker-based annotation uses mean expression of a
+    small canonical gene set; borderline clusters may
+    collapse onto the dominant type (e.g. CD4/CD8 T merge).
+  - The canonical PBMC3k has 8 clusters including a
+    tiny megakaryocyte (PF4/PPBP) cluster and a
+    dendritic (FCER1A/CLEC10A) cluster. With this marker
+    set (no MK, small DC set) those clusters are
+    mis-assigned by argmax — e.g. in one run cluster 3
+    (SDPR/PF4/GNG11/PPBP markers = megakaryocyte) was
+    labelled Monocyte. Inspect rank_genes_groups output
+    before trusting the label column for small clusters.
+
+Elapsed: 17.2 s

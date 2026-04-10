@@ -10,7 +10,6 @@ dependencies:
   - bioconductor-singlecellexperiment=1.22.0
   - bioconductor-scuttle=1.10.0
   - bioconductor-scran=1.28.0
-  - bioconductor-scvelo=0.2.5
   - bioconductor-monocle3=1.3.1
   
   # R visualization
@@ -29,6 +28,8 @@ dependencies:
   - scikit-learn=1.3.0
   - matplotlib=3.7.2
   - seaborn=0.12.2
+  - pyyaml=6.0
+  - pytest=7.4.0
   
   # Single-cell Python packages
   - scanpy=1.9.3
@@ -39,12 +40,6 @@ dependencies:
   - velocyto=0.17.17
   - scvelo=0.3.1
   - cellrank=1.9.1
-  
-  # Jupyter
-  - jupyter=1.0.0
-  - jupyterlab=4.0.4
-  - ipywidgets=8.0.7
-  - ipykernel=6.25.1
   
   # Utilities
   - git=2.41.0

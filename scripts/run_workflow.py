@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Main Executable Pipeline for scRNA-seq Analysis
-Runs the full workflow: load -> QC -> normalize -> cluster -> annotate -> DE -> plot -> save
+
+Runs the full workflow: load -> QC -> normalize -> cluster -> annotate -> DE -> plot -> save.
+Parameters can be overridden by a YAML config file via --config.
 """
 
 import argparse
@@ -21,7 +23,7 @@ from generate_synthetic_data import generate_synthetic_data
 
 
 # ---------------------------------------------------------------------------
-# Default marker dictionary
+# Default marker dictionary (used when config doesn't provide one)
 # ---------------------------------------------------------------------------
 DEFAULT_MARKERS = {
     "T_cell":     ["CD3D", "CD3E", "IL7R"],
@@ -30,6 +32,48 @@ DEFAULT_MARKERS = {
     "NK_cell":    ["NKG7", "GNLY", "KLRD1"],
     "Dendritic":  ["FCER1A", "CLEC10A", "CD1C"],
 }
+
+DEFAULT_CONFIG = {
+    "qc": {
+        "min_genes": 200,
+        "max_genes": 5000,
+        "max_mt_pct": 20,
+        "max_rb_pct": 50,
+        "min_cells_per_gene": 3,
+    },
+    "feature_selection": {"n_top_genes": 2000},
+    "pca": {"n_pcs": 50},
+    "clustering": {"resolution": 0.5},
+    "differential_expression": {"method": "wilcoxon"},
+}
+
+
+def load_config(config_path):
+    """Load YAML config and merge with defaults. Returns nested dict."""
+    if not config_path:
+        return DEFAULT_CONFIG
+
+    try:
+        import yaml
+    except ImportError:
+        print("Warning: pyyaml not installed; using default config", file=sys.stderr)
+        return DEFAULT_CONFIG
+
+    if not os.path.isfile(config_path):
+        print(f"Warning: config file not found ({config_path}); using defaults", file=sys.stderr)
+        return DEFAULT_CONFIG
+
+    with open(config_path, "r") as fh:
+        user_cfg = yaml.safe_load(fh) or {}
+
+    # Shallow-merge top-level sections onto defaults
+    merged = {k: dict(v) for k, v in DEFAULT_CONFIG.items()}
+    for section, values in user_cfg.items():
+        if isinstance(values, dict):
+            merged.setdefault(section, {}).update(values)
+        else:
+            merged[section] = values
+    return merged
 
 
 # ---------------------------------------------------------------------------
@@ -48,12 +92,19 @@ def load_data(input_path):
     return adata
 
 
-def run_qc(adata):
-    """Step 2: QC filtering."""
+def run_qc(adata, config):
+    """Step 2: QC filtering using config thresholds."""
+    qc_cfg = config.get("qc", {})
     print("[Step 2] Calculating QC metrics and filtering")
     adata = calculate_qc_metrics(adata)
-    adata = filter_cells(adata, min_genes=200, max_genes=5000, max_mt=20, max_rb=50)
-    adata = filter_genes(adata, min_cells=3)
+    adata = filter_cells(
+        adata,
+        min_genes=qc_cfg.get("min_genes", 200),
+        max_genes=qc_cfg.get("max_genes", 5000),
+        max_mt=qc_cfg.get("max_mt_pct", 20),
+        max_rb=qc_cfg.get("max_rb_pct", 50),
+    )
+    adata = filter_genes(adata, min_cells=qc_cfg.get("min_cells_per_gene", 3))
     return adata
 
 
@@ -66,8 +117,10 @@ def normalize(adata):
     return adata
 
 
-def select_hvg_and_pca(adata, n_top_genes=2000, n_pcs=50):
+def select_hvg_and_pca(adata, config):
     """Step 4: HVG selection + PCA."""
+    n_top_genes = config.get("feature_selection", {}).get("n_top_genes", 2000)
+    n_pcs = config.get("pca", {}).get("n_pcs", 50)
     print(f"[Step 4] Selecting {n_top_genes} HVGs and running PCA ({n_pcs} PCs)")
     sc.pp.highly_variable_genes(adata, n_top_genes=n_top_genes, flavor="seurat_v3",
                                 layer=None, subset=False)
@@ -76,8 +129,9 @@ def select_hvg_and_pca(adata, n_top_genes=2000, n_pcs=50):
     return adata
 
 
-def umap_and_cluster(adata, resolution=0.5):
+def umap_and_cluster(adata, config):
     """Step 5: Neighbor graph, UMAP, and Leiden clustering."""
+    resolution = config.get("clustering", {}).get("resolution", 0.5)
     print(f"[Step 5] Building neighbor graph, UMAP, and Leiden (res={resolution})")
     sc.pp.neighbors(adata, n_pcs=30)
     sc.tl.umap(adata)
@@ -98,10 +152,11 @@ def annotate(adata, marker_dict=None):
     return adata
 
 
-def differential_expression(adata, groupby="leiden"):
+def differential_expression(adata, config):
     """Step 7: DE analysis."""
-    print(f"[Step 7] Differential expression (Wilcoxon, groupby={groupby})")
-    sc.tl.rank_genes_groups(adata, groupby=groupby, method="wilcoxon")
+    method = config.get("differential_expression", {}).get("method", "wilcoxon")
+    print(f"[Step 7] Differential expression ({method}, groupby=leiden)")
+    sc.tl.rank_genes_groups(adata, groupby="leiden", method=method)
     return adata
 
 
@@ -113,13 +168,10 @@ def generate_plots(adata, output_dir):
 
     sc.settings.figdir = str(plot_dir)
 
-    sc.pl.umap(adata, color=["leiden"], show=False,
-               save="_leiden.png")
+    sc.pl.umap(adata, color=["leiden"], show=False, save="_leiden.png")
     if "cell_type_refined" in adata.obs.columns:
-        sc.pl.umap(adata, color=["cell_type_refined"], show=False,
-                   save="_celltype.png")
-    sc.pl.rank_genes_groups(adata, n_genes=10, show=False,
-                            save="_de_genes.png")
+        sc.pl.umap(adata, color=["cell_type_refined"], show=False, save="_celltype.png")
+    sc.pl.rank_genes_groups(adata, n_genes=10, show=False, save="_de_genes.png")
     print(f"  Plots saved to {plot_dir}")
 
 
@@ -144,32 +196,27 @@ def save_results(adata, output_dir):
 # ---------------------------------------------------------------------------
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="scRNA-seq analysis pipeline"
-    )
+    parser = argparse.ArgumentParser(description="scRNA-seq analysis pipeline")
     parser.add_argument("--input", "-i", default=None,
                         help="Path to input h5ad file (omit to use synthetic data)")
     parser.add_argument("--output", "-o", default="results",
                         help="Output directory (default: results)")
-    parser.add_argument("--config", "-c", default=None,
-                        help="Path to YAML config (optional, not yet implemented)")
-    parser.add_argument("--resolution", type=float, default=0.5,
-                        help="Leiden clustering resolution (default: 0.5)")
-    parser.add_argument("--n-hvgs", type=int, default=2000,
-                        help="Number of highly variable genes (default: 2000)")
+    parser.add_argument("--config", "-c", default="config/analysis_config.yaml",
+                        help="Path to YAML config (default: config/analysis_config.yaml)")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    config = load_config(args.config)
 
     adata = load_data(args.input)
-    adata = run_qc(adata)
+    adata = run_qc(adata, config)
     adata = normalize(adata)
-    adata = select_hvg_and_pca(adata, n_top_genes=args.n_hvgs)
-    adata = umap_and_cluster(adata, resolution=args.resolution)
+    adata = select_hvg_and_pca(adata, config)
+    adata = umap_and_cluster(adata, config)
     adata = annotate(adata)
-    adata = differential_expression(adata)
+    adata = differential_expression(adata, config)
     generate_plots(adata, args.output)
     save_results(adata, args.output)
 

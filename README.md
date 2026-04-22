@@ -4,6 +4,16 @@
 
 This is the second project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio). After Project 1 surfaced immune-related pathways in bulk RNA-seq, this project digs into the tumour microenvironment at single-cell resolution to understand how MSI-high status reshapes immune infiltration — a question directly relevant to checkpoint inhibitor response in GEA.
 
+## At a Glance
+
+| | |
+|---|---|
+| **Stack** | Seurat v5 · Scanpy · Leiden · UMAP · Monocle3 · CellChat · Docker |
+| **Data** | GEA tumour microenvironment (target); 10x PBMC 3k (POC substitute) |
+| **POC headline** | 2,643 cells post-QC; 7 Leiden clusters recover canonical T/B/Mono/NK structure |
+| **Role** | Scoped the MSI/TME question and interpreted clusters against immune biology; implementation AI-assisted |
+| **Portfolio** | Project 2 of 7 · [full narrative](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) |
+
 ## What It Does
 
 Single-cell RNA-seq analysis of GEA tumour microenvironment:

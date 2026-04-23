@@ -6,28 +6,29 @@ This is the second project in a [computational biology portfolio](https://github
 
 ## What It Does
 
-Single-cell RNA-seq analysis of GEA tumour microenvironment:
+`scripts/run_workflow.py` is a Python/Scanpy end-to-end orchestrator that runs nine steps on either a user-provided `.h5ad` or synthetic data:
 
-1. **Quality control** — Cell filtering (nUMI, nGenes, %MT), doublet detection
-2. **Normalization** — Library size normalization, log transformation, HVG selection
-3. **Dimensionality reduction** — PCA, UMAP for visualization
-4. **Clustering** — Leiden / graph-based clustering for cell population identification
-5. **Cell type annotation** — Marker-based and reference-based annotation
-6. **Differential expression** — Cluster-specific DE analysis
-7. **Trajectory analysis** — Pseudotime ordering
-8. **Visualisation utilities** — QC, UMAP, and marker-plot helpers
+1. **Load** — read `.h5ad` (or call `generate_synthetic_data()` when no input is passed)
+2. **QC** — `qc_metrics.calculate_qc_metrics` + `filter_cells` (min 200 / max 5000 genes, ≤ 20 % MT, ≤ 50 % ribo) + `filter_genes` (≥ 3 cells)
+3. **Normalize** — `sc.pp.normalize_total(target_sum=1e4)` + `log1p`
+4. **HVG + PCA** — 2 000 HVGs (`seurat_v3`) + 50-component PCA
+5. **Neighbors / UMAP / Leiden** — resolution configurable via `--resolution`
+6. **Annotation** — marker-based (`annotation.annotate_by_markers`) over a default T/B/Monocyte/NK/DC panel + cluster-majority refinement
+7. **Differential expression** — `sc.tl.rank_genes_groups` (Wilcoxon) by cluster
+8. **Plots** — Leiden UMAP, cell-type UMAP, DE gene ranks (written under `<output>/plots/`)
+9. **Save** — `processed.h5ad`, `cell_metadata.csv`, `de_results.csv`
 
-The workflow is orchestrated from `scripts/run_workflow.py` and is runnable on synthetic fixtures produced by `scripts/generate_synthetic_data.py`, so the pipeline can be exercised end-to-end without access to a private cohort.
+Two standalone R scripts (`scripts/clustering.R` Seurat clustering, `scripts/trajectory.R` pseudotime) sit alongside the Python workflow for the specific steps where R tooling is preferred; they are not orchestrated by `run_workflow.py`.
 
 ## Methods & Tools
 
 | Category | Tools |
 |----------|-------|
-| R analysis | Seurat (clustering, trajectory) |
-| Python analysis | Scanpy-style QC + annotation utilities |
+| End-to-end workflow | Python + Scanpy (Leiden, UMAP, Wilcoxon DE) |
+| Complementary R | Seurat clustering, pseudotime trajectory |
 | Clustering | Graph-based / Leiden |
 | Dimensionality reduction | PCA, UMAP |
-| Visualisation | matplotlib, seaborn, ggplot2 |
+| Visualisation | matplotlib, Scanpy plotting |
 | Testing | pytest |
 | Environment | Docker, Conda |
 
@@ -40,18 +41,18 @@ project-2-scrnaseq-analysis/
 ├── config/
 │   └── analysis_config.yaml
 ├── scripts/
-│   ├── run_workflow.py           # End-to-end orchestrator
+│   ├── run_workflow.py           # Python/Scanpy end-to-end orchestrator
 │   ├── generate_synthetic_data.py# Reproducible synthetic input data
-│   ├── qc_metrics.py             # QC metrics (nUMI, nGenes, %MT, doublets)
-│   ├── clustering.R              # Seurat clustering
-│   ├── annotation.py             # Marker- and reference-based cell-type annotation
-│   ├── trajectory.R              # Pseudotime trajectory
-│   └── visualization_utils.py    # Plot helpers
+│   ├── qc_metrics.py             # QC metrics + filtering
+│   ├── annotation.py             # Marker-based cell-type annotation
+│   ├── visualization_utils.py    # Plot helpers
+│   ├── clustering.R              # Standalone Seurat clustering
+│   └── trajectory.R              # Standalone pseudotime trajectory
 ├── tests/                        # pytest suite
 └── .gitignore
 ```
 
-Run outputs (QC reports, figures, tables, Seurat/AnnData objects) are written under `data/` and `results/` at runtime and are gitignored.
+Run outputs (processed `.h5ad`, QC reports, figures, DE tables) are written under `data/` and `results/` at runtime and are gitignored.
 
 ## Quick Start
 
@@ -67,9 +68,10 @@ docker run -it -v $(pwd):/workspace scrnaseq-analysis bash
 conda env create -f environment.yml
 conda activate scrnaseq-analysis
 
-# Synthetic end-to-end run
-python scripts/generate_synthetic_data.py
-python scripts/run_workflow.py
+# Synthetic end-to-end run (no input data required)
+python scripts/run_workflow.py --output results/
+# or with real data:
+python scripts/run_workflow.py --input data/your.h5ad --output results/
 ```
 
 ## My Role

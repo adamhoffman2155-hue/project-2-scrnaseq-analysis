@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, "claude/**"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: pytest
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install Python test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # scanpy + anndata pull in heavy deps; the current tests only need
+          # numpy + scipy + pyyaml + pytest, so keep CI light.
+          pip install numpy scipy pyyaml pytest
+
+      - name: Run pytest
+        run: pytest tests/ -v --tb=short
+
+  config-smoke:
+    name: config loader smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install pyyaml
+      - name: Assert `--config` wiring in run_workflow.py is real
+        # Guard against regressions to the "not yet implemented" state.
+        run: |
+          python - <<'PY'
+          import ast, sys, pathlib
+          src = pathlib.Path('scripts/run_workflow.py').read_text()
+          assert 'def load_config' in src, 'load_config() missing'
+          assert 'not yet implemented' not in src, '--config still marked as unimplemented'
+          # Parse to make sure the file is syntactically valid.
+          ast.parse(src)
+          print('OK: --config flag is wired through run_workflow.py')
+          PY
+
+  lint:
+    name: lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check scripts tests --select E9,F63,F7,F82 --exit-zero

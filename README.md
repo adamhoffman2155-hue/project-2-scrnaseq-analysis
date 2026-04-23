@@ -1,5 +1,7 @@
 # Project 2: scRNA-seq Tumour Microenvironment Analysis
 
+[![CI](https://github.com/adamhoffman2155-hue/project-2-scrnaseq-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/adamhoffman2155-hue/project-2-scrnaseq-analysis/actions/workflows/ci.yml)
+
 **Research question:** How does MSI status remodel the immune microenvironment in gastroesophageal adenocarcinoma?
 
 This is the second project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio). After Project 1 surfaced immune-related pathways in bulk RNA-seq, this project digs into the tumour microenvironment at single-cell resolution to understand how MSI-high status reshapes immune infiltration — a question directly relevant to checkpoint inhibitor response in GEA.

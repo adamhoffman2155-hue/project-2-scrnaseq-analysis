@@ -11,23 +11,24 @@ Single-cell RNA-seq analysis of GEA tumour microenvironment:
 1. **Quality control** — Cell filtering (nUMI, nGenes, %MT), doublet detection
 2. **Normalization** — Library size normalization, log transformation, HVG selection
 3. **Dimensionality reduction** — PCA, UMAP for visualization
-4. **Clustering** — Leiden algorithm for cell population identification
+4. **Clustering** — Leiden / graph-based clustering for cell population identification
 5. **Cell type annotation** — Marker-based and reference-based annotation
 6. **Differential expression** — Cluster-specific DE analysis
-7. **Trajectory analysis** — Pseudotime ordering with Monocle3
-8. **Cell-cell communication** — CellChat interaction analysis
+7. **Trajectory analysis** — Pseudotime ordering
+8. **Visualisation utilities** — QC, UMAP, and marker-plot helpers
 
-The analysis explores MSI-high immune infiltration patterns and T-cell exhaustion signatures relevant to checkpoint inhibitor response in GEA.
+The workflow is orchestrated from `scripts/run_workflow.py` and is runnable on synthetic fixtures produced by `scripts/generate_synthetic_data.py`, so the pipeline can be exercised end-to-end without access to a private cohort.
 
 ## Methods & Tools
 
 | Category | Tools |
 |----------|-------|
-| R Analysis | Seurat v5, Monocle3, CellChat |
-| Python Analysis | Scanpy, scvi-tools |
-| Clustering | Leiden algorithm |
-| Visualization | UMAP, ggplot2, matplotlib, seaborn |
-| Batch Correction | Harmony, BBKNN |
+| R analysis | Seurat (clustering, trajectory) |
+| Python analysis | Scanpy-style QC + annotation utilities |
+| Clustering | Graph-based / Leiden |
+| Dimensionality reduction | PCA, UMAP |
+| Visualisation | matplotlib, seaborn, ggplot2 |
+| Testing | pytest |
 | Environment | Docker, Conda |
 
 ## Project Structure
@@ -36,33 +37,21 @@ The analysis explores MSI-high immune infiltration patterns and T-cell exhaustio
 project-2-scrnaseq-analysis/
 ├── Dockerfile
 ├── environment.yml
-├── notebooks/
-│   ├── 01_qc_filtering.ipynb
-│   ├── 02_normalization_scaling.ipynb
-│   ├── 03_dimensionality_reduction.ipynb
-│   ├── 04_clustering.ipynb
-│   ├── 05_cell_type_annotation.ipynb
-│   ├── 06_differential_expression.ipynb
-│   ├── 07_trajectory_analysis.ipynb
-│   └── 08_integration.ipynb
+├── config/
+│   └── analysis_config.yaml
 ├── scripts/
-│   ├── qc_metrics.py
-│   ├── clustering.R
-│   ├── annotation.py
-│   ├── trajectory.R
-│   └── visualization_utils.py
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── metadata/
-├── results/
-│   ├── qc/
-│   ├── figures/
-│   ├── tables/
-│   └── objects/
-└── config/
-    └── analysis_config.yaml
+│   ├── run_workflow.py           # End-to-end orchestrator
+│   ├── generate_synthetic_data.py# Reproducible synthetic input data
+│   ├── qc_metrics.py             # QC metrics (nUMI, nGenes, %MT, doublets)
+│   ├── clustering.R              # Seurat clustering
+│   ├── annotation.py             # Marker- and reference-based cell-type annotation
+│   ├── trajectory.R              # Pseudotime trajectory
+│   └── visualization_utils.py    # Plot helpers
+├── tests/                        # pytest suite
+└── .gitignore
 ```
+
+Run outputs (QC reports, figures, tables, Seurat/AnnData objects) are written under `data/` and `results/` at runtime and are gitignored.
 
 ## Quick Start
 
@@ -72,13 +61,15 @@ cd project-2-scrnaseq-analysis
 
 # Using Docker
 docker build -t scrnaseq-analysis .
-docker run -it -v $(pwd):/workspace -p 8888:8888 scrnaseq-analysis bash
+docker run -it -v $(pwd):/workspace scrnaseq-analysis bash
 
 # Or Conda
 conda env create -f environment.yml
 conda activate scrnaseq-analysis
 
-jupyter lab
+# Synthetic end-to-end run
+python scripts/generate_synthetic_data.py
+python scripts/run_workflow.py
 ```
 
 ## My Role

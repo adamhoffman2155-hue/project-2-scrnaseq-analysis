@@ -1,6 +1,9 @@
 # Project 2: scRNA-seq Tumour Microenvironment Analysis
 
-> **Branch status:** This repo currently has two active branches — `master` (this one) and `main` — that have diverged independently and now contain different Dockerfile, scripts, and README revisions. The content below describes the `master` variant. Treat either branch as authoritative only once they have been consolidated.
+![CI](https://github.com/adamhoffman2155-hue/project-2-scrnaseq-analysis/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Repro](https://img.shields.io/badge/FAIR_DOME_CURE-11%2F14_%7C_5%2F7_%7C_4%2F4-brightgreen)
 
 **Research question:** How does MSI status remodel the immune microenvironment in gastroesophageal adenocarcinoma?
 
@@ -83,6 +86,30 @@ I scoped the MSI/TME question based on my thesis cohort, evaluated cluster assig
 ## Context in the Portfolio
 
 This is **Project 2 of 7**. It extends Project 1's bulk transcriptomics into single-cell resolution, asking whether the immune signatures detected in bulk are driven by specific cell populations. The immune subtype classifications from this work feed into the survival model in Project 6. See the [portfolio site](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio) for the full narrative.
+
+### Cross-project data flow
+
+```
+Project 1 (bulk RNA-seq DE)     ──┐  immune signatures
+                                  │
+Project 2 (this one — scRNA-seq) ─┼──▶  Project 6 (survival — TME subtype covariate)
+                                  │
+```
+
+- **Upstream** — consumes sparse count matrices (`.h5ad`) from TCGA-STAD or user input; synthetic data generator available offline.
+- **Downstream** — TME immune-subtype labels feed the Cox covariate panel in Project 6 (narrative input).
+
+## Benchmarks
+
+| Benchmark | Output | Summary |
+| --- | --- | --- |
+| Harmony vs scVI batch correction | [`results/benchmark/batch_correction_metrics.md`](results/benchmark/batch_correction_metrics.md) | On a 600-cell synthetic AnnData with 2 simulated batches, Harmony compresses batch silhouette toward 0 while preserving cell-type structure. scVI is guarded (optional `scvi-tools` install) so CI passes without torch. |
+
+Rebuild with `python scripts/benchmark_harmony_vs_scvi.py`.
+
+## Reproducibility
+
+See [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) for the FAIR-BioRS / DOME / CURE self-scorecard (11/14 · 5/7 · 4/4).
 
 ## License
 

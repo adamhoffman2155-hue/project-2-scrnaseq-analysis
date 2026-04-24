@@ -5,6 +5,8 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Repro](https://img.shields.io/badge/FAIR_DOME_CURE-11%2F14_%7C_5%2F7_%7C_4%2F4-brightgreen)
 
+> **Branch status:** `main` holds the PBMC 3k scRNA-seq POC (2,643 cells, 7 Leiden clusters, committed in `results/poc/`); this feature branch `claude/research-industry-standards-bQAWX` adds uniform polish (CI, pre-commit, REPRODUCIBILITY.md, Harmony vs scVI benchmark, cross-project docs) on top of `master` (pre-POC). The intended path is to merge this feature branch's polish layer into `main` — the branches are additive, not independently authoritative.
+
 **Research question:** How does MSI status remodel the immune microenvironment in gastroesophageal adenocarcinoma?
 
 This is the second project in a [computational biology portfolio](https://github.com/adamhoffman2155-hue/bioinformatics-portfolio). After Project 1 surfaced immune-related pathways in bulk RNA-seq, this project digs into the tumour microenvironment at single-cell resolution to understand how MSI-high status reshapes immune infiltration — a question directly relevant to checkpoint inhibitor response in GEA.

@@ -9,32 +9,31 @@ import os
 import sys
 from pathlib import Path
 
-import numpy as np
 import scanpy as sc
 
 # Ensure sibling modules are importable
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from qc_metrics import calculate_qc_metrics, filter_cells, filter_genes
 from annotation import annotate_by_markers, refine_annotations
 from generate_synthetic_data import generate_synthetic_data
-
+from qc_metrics import calculate_qc_metrics, filter_cells, filter_genes
 
 # ---------------------------------------------------------------------------
 # Default marker dictionary
 # ---------------------------------------------------------------------------
 DEFAULT_MARKERS = {
-    "T_cell":     ["CD3D", "CD3E", "IL7R"],
-    "B_cell":     ["CD19", "MS4A1", "CD79A"],
-    "Monocyte":   ["CD14", "LYZ", "CST3"],
-    "NK_cell":    ["NKG7", "GNLY", "KLRD1"],
-    "Dendritic":  ["FCER1A", "CLEC10A", "CD1C"],
+    "T_cell": ["CD3D", "CD3E", "IL7R"],
+    "B_cell": ["CD19", "MS4A1", "CD79A"],
+    "Monocyte": ["CD14", "LYZ", "CST3"],
+    "NK_cell": ["NKG7", "GNLY", "KLRD1"],
+    "Dendritic": ["FCER1A", "CLEC10A", "CD1C"],
 }
 
 
 # ---------------------------------------------------------------------------
 # Pipeline steps
 # ---------------------------------------------------------------------------
+
 
 def load_data(input_path):
     """Step 1: Load data from h5ad or generate synthetic data."""
@@ -69,8 +68,9 @@ def normalize(adata):
 def select_hvg_and_pca(adata, n_top_genes=2000, n_pcs=50):
     """Step 4: HVG selection + PCA."""
     print(f"[Step 4] Selecting {n_top_genes} HVGs and running PCA ({n_pcs} PCs)")
-    sc.pp.highly_variable_genes(adata, n_top_genes=n_top_genes, flavor="seurat_v3",
-                                layer=None, subset=False)
+    sc.pp.highly_variable_genes(
+        adata, n_top_genes=n_top_genes, flavor="seurat_v3", layer=None, subset=False
+    )
     sc.pp.scale(adata, max_value=10)
     sc.tl.pca(adata, n_comps=n_pcs, use_highly_variable=True)
     return adata
@@ -113,13 +113,10 @@ def generate_plots(adata, output_dir):
 
     sc.settings.figdir = str(plot_dir)
 
-    sc.pl.umap(adata, color=["leiden"], show=False,
-               save="_leiden.png")
+    sc.pl.umap(adata, color=["leiden"], show=False, save="_leiden.png")
     if "cell_type_refined" in adata.obs.columns:
-        sc.pl.umap(adata, color=["cell_type_refined"], show=False,
-                   save="_celltype.png")
-    sc.pl.rank_genes_groups(adata, n_genes=10, show=False,
-                            save="_de_genes.png")
+        sc.pl.umap(adata, color=["cell_type_refined"], show=False, save="_celltype.png")
+    sc.pl.rank_genes_groups(adata, n_genes=10, show=False, save="_de_genes.png")
     print(f"  Plots saved to {plot_dir}")
 
 
@@ -143,20 +140,24 @@ def save_results(adata, output_dir):
 # Main
 # ---------------------------------------------------------------------------
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="scRNA-seq analysis pipeline"
+    parser = argparse.ArgumentParser(description="scRNA-seq analysis pipeline")
+    parser.add_argument(
+        "--input", "-i", default=None, help="Path to input h5ad file (omit to use synthetic data)"
     )
-    parser.add_argument("--input", "-i", default=None,
-                        help="Path to input h5ad file (omit to use synthetic data)")
-    parser.add_argument("--output", "-o", default="results",
-                        help="Output directory (default: results)")
-    parser.add_argument("--config", "-c", default=None,
-                        help="Path to YAML config (optional, not yet implemented)")
-    parser.add_argument("--resolution", type=float, default=0.5,
-                        help="Leiden clustering resolution (default: 0.5)")
-    parser.add_argument("--n-hvgs", type=int, default=2000,
-                        help="Number of highly variable genes (default: 2000)")
+    parser.add_argument(
+        "--output", "-o", default="results", help="Output directory (default: results)"
+    )
+    parser.add_argument(
+        "--config", "-c", default=None, help="Path to YAML config (optional, not yet implemented)"
+    )
+    parser.add_argument(
+        "--resolution", type=float, default=0.5, help="Leiden clustering resolution (default: 0.5)"
+    )
+    parser.add_argument(
+        "--n-hvgs", type=int, default=2000, help="Number of highly variable genes (default: 2000)"
+    )
     return parser.parse_args()
 
 

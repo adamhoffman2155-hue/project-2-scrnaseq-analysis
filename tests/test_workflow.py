@@ -1,12 +1,12 @@
 """Tests for scRNA-seq workflow components."""
 
 import numpy as np
-import pytest
 
 
 def test_synthetic_data_shape():
     """Test that synthetic data has expected dimensions."""
     from scipy import sparse
+
     n_cells, n_genes = 500, 2000
     X = sparse.random(n_cells, n_genes, density=0.1, format="csr")
     assert X.shape == (n_cells, n_genes)

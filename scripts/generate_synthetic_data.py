@@ -3,9 +3,8 @@ Generate Synthetic scRNA-seq Data
 Creates a realistic sparse count matrix with known cell types and QC metrics.
 """
 
-import numpy as np
-import scanpy as sc
 import anndata as ad
+import numpy as np
 from scipy.sparse import csr_matrix
 
 
@@ -106,8 +105,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Generate synthetic scRNA-seq data")
-    parser.add_argument("-o", "--output", default="synthetic_data.h5ad",
-                        help="Output h5ad path")
+    parser.add_argument("-o", "--output", default="synthetic_data.h5ad", help="Output h5ad path")
     parser.add_argument("--n-cells", type=int, default=500)
     parser.add_argument("--n-genes", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=42)

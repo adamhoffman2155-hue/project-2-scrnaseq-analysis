@@ -3,16 +3,16 @@ Plotting Utilities for Single-Cell RNA-seq Analysis
 Provides UMAP, violin, heatmap, and QC summary plots using scanpy and matplotlib.
 """
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import scanpy as sc
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
+import scanpy as sc
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _load_adata(adata_or_path):
     """Return an AnnData object, loading from path if necessary."""
@@ -32,6 +32,7 @@ def _save_figure(fig, save_path):
 # ---------------------------------------------------------------------------
 # UMAP
 # ---------------------------------------------------------------------------
+
 
 def plot_umap(adata_or_path, color_by="leiden", save_path=None, **kwargs):
     """
@@ -67,6 +68,7 @@ def plot_umap(adata_or_path, color_by="leiden", save_path=None, **kwargs):
 # ---------------------------------------------------------------------------
 # Violin
 # ---------------------------------------------------------------------------
+
 
 def plot_violin(adata_or_path, genes, groupby="leiden", save_path=None, **kwargs):
     """
@@ -110,6 +112,7 @@ def plot_violin(adata_or_path, genes, groupby="leiden", save_path=None, **kwargs
 # Heatmap
 # ---------------------------------------------------------------------------
 
+
 def plot_heatmap(adata_or_path, markers, groupby="leiden", save_path=None, **kwargs):
     """
     Heatmap of marker gene expression per group (scanpy.pl style).
@@ -140,8 +143,11 @@ def plot_heatmap(adata_or_path, markers, groupby="leiden", save_path=None, **kwa
         var_names = present
 
     result = sc.pl.heatmap(
-        adata, var_names=var_names, groupby=groupby,
-        show=False, **kwargs,
+        adata,
+        var_names=var_names,
+        groupby=groupby,
+        show=False,
+        **kwargs,
     )
 
     if save_path is not None:
@@ -154,6 +160,7 @@ def plot_heatmap(adata_or_path, markers, groupby="leiden", save_path=None, **kwa
 # ---------------------------------------------------------------------------
 # QC summary
 # ---------------------------------------------------------------------------
+
 
 def plot_qc_summary(adata_or_path, save_path=None):
     """
@@ -196,8 +203,9 @@ def plot_qc_summary(adata_or_path, save_path=None):
     for ax, metric, label in zip(axes, metrics, labels):
         values = adata.obs[metric].values
         ax.hist(values, bins=50, edgecolor="black", alpha=0.7)
-        ax.axvline(np.median(values), color="red", linestyle="--",
-                   label=f"median={np.median(values):.1f}")
+        ax.axvline(
+            np.median(values), color="red", linestyle="--", label=f"median={np.median(values):.1f}"
+        )
         ax.set_xlabel(label)
         ax.set_ylabel("Frequency")
         ax.set_title(label)

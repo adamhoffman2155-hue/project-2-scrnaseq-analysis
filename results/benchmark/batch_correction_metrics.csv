@@ -1,0 +1,4 @@
+method,batch_silhouette,celltype_silhouette
+PCA (uncorrected),0.0019346248591318727,0.48334166407585144
+Harmony,-0.0016149410512298346,0.48797011375427246
+scVI (skipped — scvi-tools not installed),,

@@ -96,7 +96,7 @@ def plot_violin(adata_or_path, genes, groupby="leiden", save_path=None, **kwargs
     if n_genes == 1:
         axes = [axes]
 
-    for ax, gene in zip(axes, genes):
+    for ax, gene in zip(axes, genes, strict=False):
         if gene not in adata.var_names:
             ax.set_title(f"{gene} (not found)")
             continue
@@ -200,7 +200,7 @@ def plot_qc_summary(adata_or_path, save_path=None):
     if n == 1:
         axes = [axes]
 
-    for ax, metric, label in zip(axes, metrics, labels):
+    for ax, metric, label in zip(axes, metrics, labels, strict=False):
         values = adata.obs[metric].values
         ax.hist(values, bins=50, edgecolor="black", alpha=0.7)
         ax.axvline(

@@ -6,8 +6,9 @@ data/raw/*.csv
 data/processed/
 !data/metadata/
 
-# Results
-results/
+# Results (whitelist committed benchmark subdir)
+results/*
+!results/benchmark/
 
 # Logs
 logs/

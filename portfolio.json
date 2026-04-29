@@ -1,0 +1,38 @@
+{
+  "id": 2,
+  "title": "scRNA-seq Tumour Microenvironment Analysis",
+  "question": "How does MSI status remodel the immune microenvironment in GEA?",
+  "stack": ["Scanpy", "Seurat v5", "Leiden", "UMAP", "Monocle3", "CellChat", "Docker"],
+  "dataset_target": "MSI-stratified GEA tumour scRNA-seq (e.g. Pelka 2021 CRC atlas, ~2 GB)",
+  "dataset_actual_poc": "10x Genomics PBMC 3k (2,700 PBMCs from a healthy donor)",
+  "substitution_reason": "Full MSI/TME analysis needs a larger gated dataset; PBMC 3k is the canonical scanpy/Seurat tutorial dataset for infrastructure validation",
+  "status": "Runnable POC (infrastructure check only — does NOT answer the MSI/TME question)",
+  "reproduce_command": "pip install scanpy igraph leidenalg pandas numpy scipy matplotlib && python scripts/poc/run_poc.py",
+  "outputs": [
+    "results/poc/cluster_composition.csv",
+    "results/poc/poc_summary.txt"
+  ],
+  "headline_result": {
+    "n_cells_loaded": 2700,
+    "n_cells_post_qc": 2643,
+    "n_genes_post_qc": 13714,
+    "n_leiden_clusters": 7,
+    "celltype_distribution": {
+      "T_cell": 1177,
+      "Monocyte": 688,
+      "NK_cell": 437,
+      "B_cell": 341
+    },
+    "interpretation": "Recovers canonical T/B/Monocyte/NK lineage structure; cluster markers match Seurat tutorial within ~10–15%"
+  },
+  "limitations": [
+    "PBMC3k is a healthy-donor benchmark, not a tumour sample — no MSI/tumour metadata",
+    "Marker-based annotation uses 5-type argmax over mean expression; small clusters (e.g. megakaryocyte, dendritic) get mis-labelled",
+    "Leiden res=0.5 returns 7 clusters vs tutorial's 8; CD4/CD8 T not split",
+    "POC does not cover integration, batch correction, doublet detection, pseudotime, or CellChat — those belong to the full analysis",
+    "Full MSI/TME analysis requires a larger gated dataset (Pelka 2021 ~2 GB) and is out of scope for the POC"
+  ],
+  "feeds_into": ["project-6-gea-survival-pipeline"],
+  "portfolio_position": "Project 2 of 7",
+  "role": "MSI/TME question framing, cluster-vs-immunology review, clinical interpretation. Implementation AI-assisted."
+}
